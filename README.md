@@ -3,47 +3,136 @@
 ## Paper
 Our paper is now publicly available. For more details, please visit: [IEEE Xplore](https://ieeexplore.ieee.org/document/10820339).
 
-
 ![Overview](docs/overview.png)
 
-## Install
+## Table of Contents
+- [Installation](#installation)
+- [Project Structure](#project-structure)
+- [Datasets](#datasets)
+- [Training](#training)
+- [Inference](#inference)
+- [Results](#results)
+- [Notes](#notes)
+
+## Installation
 You should install all the necessary dependencies in the `./requirements.txt` file.
 
-## Datasets
-Download [MVtec 3D-AD](https://www.mvtec.com/company/research/datasets/mvtec-3d-ad), then preprocess it with the script `preprocess_mvtec.py`.
+```bash
+pip install -r requirements.txt
+```
 
-Download [Synthetic Dataset (Simulation)](https://github.com/synthetic-dataset/simulation).
+## Project Structure
+```
+.
+├── .vscode/                  # VS Code configuration
+├── .devkit/                  # Development tools
+├── utils/                    # Utility functions
+│   ├── general_utils.py      # General utility functions
+│   ├── mvtec3d_utils.py      # MVTec 3D dataset utilities
+│   └── pointnet2_utils.py    # PointNet2 utilities
+├── processing/               # Data processing scripts
+│   ├── aggregate_results.py  # Results aggregation
+│   └── preprocess_mvtec.py   # MVTec dataset preprocessing
+├── models/                   # Model implementations
+│   ├── ad_models.py         # Anomaly detection models
+│   ├── dataset.py           # Dataset classes
+│   ├── feature_transfer_nets.py  # Feature transfer networks
+│   └── features.py          # Feature extraction
+├── docs/                     # Documentation and images
+│   ├── overview.png         # Project overview image
+│   └── result.png           # Result visualization
+├── training.py              # Training script
+├── inference.py             # Inference script
+├── train.sh                 # Training shell script
+├── eval.sh                  # Evaluation shell script
+└── requirements.txt         # Project dependencies
+```
+
+## Datasets
+### MVTec 3D-AD
+- Download from: [MVTec 3D-AD](https://www.mvtec.com/company/research/datasets/mvtec-3d-ad)
+- Preprocess using: `python processing/preprocess_mvtec.py`
+- Supported classes:
+  - bagel
+  - cable_gland
+  - carrot
+  - cookie
+  - dowel
+  - foam
+  - peach
+  - potato
+  - rope
+  - tire
+
+### Synthetic Dataset
+- Download from: [Synthetic Dataset (Simulation)](https://github.com/synthetic-dataset/simulation)
+- Supported classes:
+  - CandyCane
+  - ChocolateCookie
+  - ChocolatePraline
+  - Confetto
+  - GummyBear
+  - HazelnutTruffle
+  - LicoriceSandwich
+  - Lollipop
+  - Marshmallow
+  - PeppermintCandy
 
 ## Training
-To train the network refer to the example in `train.sh`.
+To train the network, use the example in `train.sh` or run directly:
 
-The `training.py` script trains the network.
+```bash
+python training.py \
+    --dataset_path ./datasets/mvtec3d \
+    --checkpoint_savepath ./checkpoints/checkpoints_mvtec \
+    --class_name bagel \
+    --epochs_no 50 \
+    --batch_size 4
+```
 
-You can specify the following options:
-
-- `--dataset_path`: Path to the root directory of the dataset.
-- `--checkpoint_savepath`: Path to the directory on which checkpoints will be saved, i.e., `checkpoints/checkpoints_mvtec`.
-- `--class_name`: Class on which the FADs are trained.
-- `--epochs_no`: Number of epochs for FADs optimization.
-- `--batch_size`: Number of samples per batch for FADs optimization.
+### Training Parameters
+- `--dataset_path`: Path to the root directory of the dataset
+- `--checkpoint_savepath`: Path to save checkpoints (e.g., `checkpoints/checkpoints_mvtec`)
+- `--class_name`: Class to train on (see supported classes above)
+- `--epochs_no`: Number of training epochs
+- `--batch_size`: Batch size for training
 
 ## Inference
-The `inference.py` script tests the trained model. It can be used to generate anomaly maps.
+To run inference and generate anomaly maps:
 
-You can specify the following options:
+```bash
+python inference.py \
+    --dataset_path ./datasets/mvtec3d \
+    --checkpoint_folder ./checkpoints/checkpoints_mvtec \
+    --class_name bagel \
+    --epochs_no 50 \
+    --batch_size 4 \
+    --qualitative_folder ./results/qualitative \
+    --quantitative_folder ./results/quantitative \
+    --visualize_plot True \
+    --produce_qualitatives True
+```
 
-- `--dataset_path`: Path to the root directory of the dataset.
-- `--checkpoint_folder`: Path to the directory of the checkpoints, i.e., `checkpoints/checkpoints_mvtec`.
-- `--class_name`: Class on which the FADs was trained.
-- `--epochs_no`: Number of epochs used in FADs optimization.
-- `--batch_size`: Number of samples per batch employed for FADs optimization.
-- `--qualitative_folder`: Folder on which the anomaly maps are saved.
-- `--quantitative_folder`: Folder on which the metrics are saved.
-- `--visualize_plot`: Flag to visualize qualitative during inference.
-- `--produce_qualitatives`: Flag to save qualitative during inference.
+### Inference Parameters
+- `--dataset_path`: Path to the dataset
+- `--checkpoint_folder`: Path to trained checkpoints
+- `--class_name`: Class to evaluate
+- `--epochs_no`: Number of epochs used in training
+- `--batch_size`: Batch size for inference
+- `--qualitative_folder`: Folder to save anomaly maps
+- `--quantitative_folder`: Folder to save metrics
+- `--visualize_plot`: Flag to visualize results during inference
+- `--produce_qualitatives`: Flag to save qualitative results
 
-## Result
+## Results
 ![Result](docs/result.png)
 
-## Note
-- The code utilizes `wandb` during training to log results. Please be sure to have a wandb account. Otherwise, if you prefer to not use `wandb`, disable it in `training.py` with the `flag mode = disabled`.
+## Notes
+- The code uses `wandb` for experiment tracking during training
+- To disable wandb, set `mode = disabled` in `training.py`
+- For optimal performance:
+  - Use GPU for training and inference
+  - Recommended batch size: 4-16
+  - Training time varies by class and dataset size
+  - Checkpoint regularly to save progress
+```
